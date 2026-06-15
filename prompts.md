@@ -26,6 +26,24 @@ Files changed: CLAUDE.md, .cursorrules, .claude/settings.json, .cursor/mdc/proje
 <!-- All subsequent turns will be appended below this line automatically -->
 
 ---
+Turn: 5
+Elapsed: 1h 30min
+Prompt: Final tasks: complete README.md with ASCII architecture diagram, security rules table,
+        quick start guide. Complete presentation.md with 8 slides. Add tagle_tag.png to repo
+        root. Run all tests one final time. Push everything to GitHub. Report total elapsed time.
+Files changed:
+  README.md — full rewrite: expanded ASCII diagram showing security middleware layer,
+              updated to 11-rule table, security hardening table, sample results, full
+              project structure, quick start, API reference, candidate background
+  presentation.md — full rewrite: 8 slides with ASCII-art boxes, live demo results,
+                    security hardening table, architecture diagram, rules table
+  tagle_tag.png — placeholder PNG added to repo root (replace with actual Tagle.ai
+                  screenshot before submission)
+  prompts.md — this entry
+Tests: 29/29 passing (final run)
+---
+
+---
 Turn: 4
 Elapsed: 1h 05min
 Prompt: Security hardening pass — implement all controls from SECURITY_AND_PII.md: filename

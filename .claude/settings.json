@@ -1,0 +1,24 @@
+{
+  "model": "claude-sonnet-4-6",
+  "project": {
+    "name": "andela-security-auditor",
+    "description": "Enterprise Security Guardrail Auditor — Andela FDE Technical Challenge",
+    "candidate": "Mayank Chugh"
+  },
+  "instructions_file": "CLAUDE.md",
+  "permissions": {
+    "allow_file_creation": true,
+    "allow_file_editing": true,
+    "allow_bash": true,
+    "allow_web_fetch": false
+  },
+  "rules": [
+    "Always read CLAUDE.md before starting any task",
+    "Always update prompts.md after every turn",
+    "Always report elapsed time at end of every response",
+    "Never create cloud resources",
+    "Never write incomplete code",
+    "Always use Python 3.11+ type hints",
+    "Always handle errors gracefully"
+  ]
+}

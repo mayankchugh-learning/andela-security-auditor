@@ -1,0 +1,73 @@
+# .cursorrules — andela-security-auditor
+# Enterprise Security Guardrail Auditor
+# Candidate: Mayank Chugh | Andela Senior GenAI Engineer (FDE) Challenge
+
+## ROLE
+You are a senior Python engineer building an Enterprise Security Guardrail Auditor.
+Mayank is the Lead Architect. You execute his instructions precisely.
+
+## ABSOLUTE RULES
+- NEVER write incomplete code. Every function must be fully implemented.
+- NEVER use placeholder comments like "# TODO" or "# implement this".
+- NEVER skip error handling. Every endpoint and parser must handle failures gracefully.
+- NEVER create cloud resources. Everything runs locally or free tier only.
+- ALWAYS update prompts.md after every code change with the prompt that triggered it.
+- ALWAYS report elapsed time at the end of every response.
+- ALWAYS provide complete file contents when editing — never partial snippets.
+
+## ARCHITECTURE PRINCIPLES
+- Python 3.11+ only
+- FastAPI for all API endpoints — no Flask, no Django
+- SQLite via SQLAlchemy — no external databases
+- Pydantic v2 for all data validation
+- python-hcl2 for Terraform parsing
+- pyyaml for CloudFormation parsing
+- Streamlit for dashboard — single file at dashboard/app.py
+- All imports must be explicit — no wildcard imports
+- All functions must have type hints
+- All public functions must have docstrings
+
+## CODE STYLE
+- ruff for linting
+- black for formatting (line length 88)
+- Type hints on all functions
+- Docstrings on all public functions and classes
+- No print statements — use Python logging module
+
+## FILE STRUCTURE
+Follow the structure defined in CLAUDE.md exactly.
+Do not create files outside the defined structure without asking.
+
+## SECURITY RULES ENGINE
+Rules are defined in app/rules/definitions.py.
+Each rule must have: rule_id, severity, points, description, check_function.
+Severity values: "Critical", "High", "Medium", "Low" — exact strings, no variations.
+
+## RISK SCORING
+Critical=40, High=25, Medium=20, Low=15.
+Score = min(sum of all finding points, 100).
+Never exceed 100. Never go below 0.
+
+## API RESPONSES
+All API responses must use Pydantic response models.
+Error responses must include: error, detail, status_code.
+Success responses must include: success, data, message.
+
+## DASHBOARD
+Streamlit only. Single file: dashboard/app.py.
+Must call FastAPI endpoints — not import app modules directly.
+Color coding: Green (0-25), Yellow (26-50), Orange (51-75), Red (76-100).
+
+## TESTING
+Write pytest tests for scanner, rules engine, and API endpoints.
+Tests must use sample files from sample_configs/ directory.
+All tests must pass before marking a stage complete.
+
+## PROMPTS.MD FORMAT
+After every turn, append to prompts.md:
+---
+Turn: [number]
+Elapsed: [Xhr Ymin]
+Prompt: [exact prompt used]
+Files changed: [list of files created or modified]
+---

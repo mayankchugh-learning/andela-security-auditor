@@ -1,0 +1,58 @@
+---
+description: Enterprise Security Guardrail Auditor — always apply these rules
+globs: ["**/*.py", "**/*.tf", "**/*.yaml", "**/*.yml", "**/*.md"]
+alwaysApply: true
+---
+
+# Project Context — andela-security-auditor
+
+## What we are building
+An Enterprise Security Guardrail Auditor that scans Terraform and CloudFormation
+infrastructure config files for security misconfigurations, calculates a Risk Score,
+and visualises findings in a dashboard.
+
+## Architect
+Mayank Chugh — 20+ years enterprise delivery, HashiCorp Terraform certified.
+He directs. You execute. No manual code edits by Mayank.
+
+## Core constraints
+- Python 3.11+ only
+- FastAPI for API layer
+- SQLite for database (no external DB)
+- Streamlit for dashboard
+- No cloud resources — runs entirely local or free tier
+- All code must be complete — no TODOs, no placeholders
+- Type hints on all functions
+- Update prompts.md after every change
+
+## Security rules to implement
+- PUBLIC_S3_BUCKET — Critical — 40pts
+- OPEN_SSH — High — 25pts
+- OPEN_RDP — High — 25pts
+- OPEN_ALL_PORTS — Critical — 40pts
+- NO_MFA — Medium — 20pts
+- WEAK_IAM_POLICY — Medium — 20pts
+- UNENCRYPTED_EBS — High — 25pts
+- HTTP_LISTENER — Medium — 20pts
+
+## Risk score
+min(sum of all finding points, 100)
+0=clean, 1-25=Low, 26-50=Medium, 51-75=High, 76-100=Critical
+
+## API endpoints
+POST /scan — file upload, returns findings + score
+GET /scans — scan history
+GET /scans/{scan_id} — scan detail
+GET /health — health check
+
+## Key files
+- CLAUDE.md — full project spec
+- prompts.md — audit log (update after every turn)
+- app/main.py — FastAPI entry point
+- app/scanner/ — parsers
+- app/rules/ — security rules engine
+- app/scoring/ — risk algorithm
+- app/database/ — SQLite models
+- app/api/ — route handlers
+- dashboard/app.py — Streamlit UI
+- sample_configs/ — test .tf and .yaml files

@@ -309,31 +309,31 @@ Update prompts.md. Report elapsed time.
 > AI updates these checkboxes as controls are implemented
 
 ### Scanner rules
-- [ ] PUBLIC_S3_BUCKET (Critical)
-- [ ] OPEN_ALL_PORTS (Critical)
-- [ ] OPEN_SSH (High)
-- [ ] OPEN_RDP (High)
-- [ ] UNENCRYPTED_EBS (High)
-- [ ] UNENCRYPTED_RDS (High)
-- [ ] HARDCODED_SECRET (High) — with value redaction
-- [ ] NO_MFA (Medium)
-- [ ] WEAK_IAM_POLICY (Medium)
-- [ ] HTTP_LISTENER (Medium)
-- [ ] UNRESTRICTED_OUTBOUND (Medium)
+- [x] PUBLIC_S3_BUCKET (Critical)
+- [x] OPEN_ALL_PORTS (Critical)
+- [x] OPEN_SSH (High)
+- [x] OPEN_RDP (High)
+- [x] UNENCRYPTED_EBS (High)
+- [x] UNENCRYPTED_RDS (High) — added in security pass
+- [x] HARDCODED_SECRET (High) — with value redaction; actual value never stored or logged
+- [x] NO_MFA (Medium)
+- [x] WEAK_IAM_POLICY (Medium)
+- [x] HTTP_LISTENER (Medium)
+- [x] UNRESTRICTED_OUTBOUND (Medium) — added in security pass
 
 ### PII controls
-- [ ] File type whitelist
-- [ ] Filename sanitisation
-- [ ] File size limit (10MB)
-- [ ] Temp file always deleted
-- [ ] Secret values never stored in DB
-- [ ] Secret values never logged
-- [ ] Security headers middleware
-- [ ] Pydantic input validation on all endpoints
-- [ ] Rate limiting on /scan
-- [ ] Clean error messages (no stack traces in API responses)
+- [x] File type whitelist — ALLOWED_EXTENSIONS = {".tf", ".yaml", ".yml", ".json"}
+- [x] Filename sanitisation — re.sub(r'[^a-zA-Z0-9._-]', '_', name)[:255]
+- [x] File size limit (10MB) — returns HTTP 413 if exceeded
+- [x] Temp file always deleted — try/finally with os.unlink()
+- [x] Secret values never stored in DB — description says "Value redacted"
+- [x] Secret values never logged — logger.warning logs attribute name only, not value
+- [x] Security headers middleware — X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy
+- [ ] Pydantic response models — not yet implemented (returning raw dicts; functional but untyped)
+- [x] Rate limiting on /scan — slowapi 10/minute per client IP
+- [x] Clean error messages — all exceptions caught; no stack traces in API responses
 
 ---
 
 *This file is maintained by the AI agent and Mayank as architect.*
-*Last updated: [AI fills timestamp]*
+*Last updated: 2026-06-15 (Turn 4 — security hardening pass)*

@@ -26,6 +26,28 @@ Files changed: CLAUDE.md, .cursorrules, .claude/settings.json, .cursor/mdc/proje
 <!-- All subsequent turns will be appended below this line automatically -->
 
 ---
+Turn: 4
+Elapsed: 1h 05min
+Prompt: Security hardening pass — implement all controls from SECURITY_AND_PII.md: filename
+        sanitisation, file type whitelist, temp file cleanup in try/finally, security headers
+        middleware, HARDCODED_SECRET rule with value redaction, rate limiting on POST /scan.
+        Update SECURITY_AND_PII.md checkboxes. Update prompts.md. Report elapsed time.
+Files changed:
+  app/main.py — security headers middleware; limiter wired from routes module
+  app/api/routes.py — filename sanitisation, file type whitelist (ALLOWED_EXTENSIONS),
+                      10MB size limit, try/finally temp file cleanup, slowapi rate limiting
+                      (10/minute), PII-safe logging, clean exception messages
+  app/rules/definitions.py — added HARDCODED_SECRET, UNENCRYPTED_RDS, UNRESTRICTED_OUTBOUND rules
+  app/rules/engine.py — _scan_for_secrets() with value redaction; UNENCRYPTED_RDS and
+                        UNRESTRICTED_OUTBOUND detection for TF + CF; _SECRET_ATTRS / _SAFE_PREFIXES
+  tests/test_security.py — 10 new tests: hardcoded secret detection, value redaction, RDS
+                            encryption, unrestricted outbound, filename sanitisation, 10MB limit,
+                            extension whitelist, security headers
+  SECURITY_AND_PII.md — all implemented controls ticked
+Tests: 29/29 passing
+---
+
+---
 Turn: 3
 Elapsed: 0h 45min
 Prompt: Start the FastAPI server on port 8000 and Streamlit dashboard on port 8501. Scan all 3

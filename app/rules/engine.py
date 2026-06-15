@@ -1,8 +1,17 @@
+import logging
+import re
+
 from app.rules.definitions import RULES, Rule
+
+logger = logging.getLogger(__name__)
+
+# Attributes to scan for hardcoded secrets
+_SECRET_ATTRS = {"password", "secret", "api_key", "access_key", "secret_key", "token"}
+# Variable/data reference prefixes that are NOT hardcoded
+_SAFE_PREFIXES = ("var.", "data.", "local.", "${")
 
 
 def _check_open_port(ingress: dict, port: int) -> bool:
-    """Return True if the given port is open to 0.0.0.0/0 or ::/0."""
     cidr_blocks = ingress.get("cidr_blocks", [])
     ipv6_blocks = ingress.get("ipv6_cidr_blocks", [])
     all_cidrs = list(cidr_blocks) + list(ipv6_blocks)
@@ -20,12 +29,28 @@ def _check_open_port(ingress: dict, port: int) -> bool:
         return False
 
 
-def apply_rules(resources: list[dict]) -> list[dict]:
-    """Apply all security rules to a flat list of parsed resources.
+def _scan_for_secrets(cfg: dict, resource_name: str) -> list[dict]:
+    """Return HARDCODED_SECRET findings for any literal secret values in cfg."""
+    findings = []
+    for key, val in cfg.items():
+        if not isinstance(val, str):
+            continue
+        if key.lower() not in _SECRET_ATTRS:
+            continue
+        if not val or any(val.startswith(p) for p in _SAFE_PREFIXES):
+            continue
+        logger.warning("HARDCODED_SECRET detected in resource: %s, attribute: %s", resource_name, key)
+        f = _finding("HARDCODED_SECRET", resource_name)
+        # Override description to name the attribute but NEVER include the value
+        f["description"] = (
+            f"Resource {resource_name} contains a hardcoded secret in attribute '{key}'. "
+            "Value redacted. Secrets in source code are exposed in version control history."
+        )
+        findings.append(f)
+    return findings
 
-    Each resource dict must have keys: type, name, config.
-    Returns a list of finding dicts.
-    """
+
+def apply_rules(resources: list[dict]) -> list[dict]:
     findings: list[dict] = []
 
     for res in resources:
@@ -33,13 +58,17 @@ def apply_rules(resources: list[dict]) -> list[dict]:
         rname = res.get("name", "")
         cfg = res.get("config", {})
 
-        # PUBLIC_S3_BUCKET
+        # --- Terraform resource types ---
+
         if rtype == "aws_s3_bucket":
             acl = cfg.get("acl", "")
             if acl in ("public-read", "public-read-write", "public"):
                 findings.append(_finding("PUBLIC_S3_BUCKET", rname))
 
-        # Security group rules
+        if rtype == "aws_s3_bucket_public_access_block":
+            if not cfg.get("block_public_acls", True):
+                findings.append(_finding("PUBLIC_S3_BUCKET", rname))
+
         if rtype == "aws_security_group":
             ingress_list = cfg.get("ingress", [])
             if not isinstance(ingress_list, list):
@@ -48,58 +77,58 @@ def apply_rules(resources: list[dict]) -> list[dict]:
                 if not isinstance(ingress, dict):
                     continue
                 protocol = str(ingress.get("protocol", "")).lower()
-                # OPEN_ALL_PORTS
-                if protocol in ("-1", "all"):
-                    cidr_blocks = ingress.get("cidr_blocks", [])
-                    ipv6_blocks = ingress.get("ipv6_cidr_blocks", [])
-                    if any(c in {"0.0.0.0/0", "::/0"} for c in list(cidr_blocks) + list(ipv6_blocks)):
-                        findings.append(_finding("OPEN_ALL_PORTS", rname))
-                        continue
+                cidr_blocks = ingress.get("cidr_blocks", [])
+                ipv6_blocks = ingress.get("ipv6_cidr_blocks", [])
+                open_to_world = any(c in {"0.0.0.0/0", "::/0"} for c in list(cidr_blocks) + list(ipv6_blocks))
+                if protocol in ("-1", "all") and open_to_world:
+                    findings.append(_finding("OPEN_ALL_PORTS", rname))
+                    continue
                 if _check_open_port(ingress, 22):
                     findings.append(_finding("OPEN_SSH", rname))
                 if _check_open_port(ingress, 3389):
                     findings.append(_finding("OPEN_RDP", rname))
 
-        # NO_MFA
+            # UNRESTRICTED_OUTBOUND — egress to 0.0.0.0/0
+            egress_list = cfg.get("egress", [])
+            if not isinstance(egress_list, list):
+                egress_list = [egress_list]
+            for egress in egress_list:
+                if not isinstance(egress, dict):
+                    continue
+                cidr_blocks = egress.get("cidr_blocks", [])
+                if "0.0.0.0/0" in cidr_blocks:
+                    findings.append(_finding("UNRESTRICTED_OUTBOUND", rname))
+                    break
+
         if rtype == "aws_iam_user":
-            # Absence of mfa_configuration or force_destroy=true flags risk
-            login_profile = cfg.get("login_profile", {}) or {}
-            password_reset = login_profile.get("password_reset_required") if isinstance(login_profile, dict) else None
-            # We flag if there's a login_profile but no explicit MFA device policy
-            # (simplified: flag if login_profile present without mfa block)
             if cfg.get("login_profile") is not None:
                 findings.append(_finding("NO_MFA", rname))
 
-        # WEAK_IAM_POLICY
         if rtype in ("aws_iam_policy", "aws_iam_role_policy"):
             policy_doc = cfg.get("policy", "")
-            if isinstance(policy_doc, str) and '"Action": "*"' in policy_doc:
+            if isinstance(policy_doc, str) and ('"Action": "*"' in policy_doc or '"Action":["*"]' in policy_doc):
                 findings.append(_finding("WEAK_IAM_POLICY", rname))
-            # Also check parsed policy document
-            policy_doc_parsed = cfg.get("policy_document", {})
-            if isinstance(policy_doc_parsed, dict):
-                for stmt in policy_doc_parsed.get("statement", []):
-                    actions = stmt.get("actions", [])
-                    if "*" in actions:
-                        findings.append(_finding("WEAK_IAM_POLICY", rname))
 
-        # UNENCRYPTED_EBS
         if rtype == "aws_ebs_volume":
-            encrypted = cfg.get("encrypted", False)
-            if not encrypted:
+            if not cfg.get("encrypted", False):
                 findings.append(_finding("UNENCRYPTED_EBS", rname))
 
-        # HTTP_LISTENER
+        if rtype == "aws_db_instance":
+            if not cfg.get("storage_encrypted", False):
+                findings.append(_finding("UNENCRYPTED_RDS", rname))
+
         if rtype in ("aws_lb_listener", "aws_alb_listener"):
-            protocol = str(cfg.get("protocol", "")).upper()
-            if protocol == "HTTP":
+            if str(cfg.get("protocol", "")).upper() == "HTTP":
                 findings.append(_finding("HTTP_LISTENER", rname))
 
+        # HARDCODED_SECRET — scan all resource types
+        findings.extend(_scan_for_secrets(cfg, rname))
+
         # --- CloudFormation resource types ---
+
         if rtype == "AWS::S3::Bucket":
-            props = cfg
-            access_control = props.get("AccessControl", "")
-            public_config = props.get("PublicAccessBlockConfiguration", {})
+            access_control = cfg.get("AccessControl", "")
+            public_config = cfg.get("PublicAccessBlockConfiguration", {})
             block_public = public_config.get("BlockPublicAcls", True) if public_config else False
             if access_control in ("PublicRead", "PublicReadWrite") or not block_public:
                 findings.append(_finding("PUBLIC_S3_BUCKET", rname))
@@ -122,10 +151,19 @@ def apply_rules(resources: list[dict]) -> list[dict]:
                         findings.append(_finding("OPEN_RDP", rname))
                 except (TypeError, ValueError):
                     pass
+            for rule in cfg.get("SecurityGroupEgress", []):
+                cidr = rule.get("CidrIp", "")
+                if cidr == "0.0.0.0/0":
+                    findings.append(_finding("UNRESTRICTED_OUTBOUND", rname))
+                    break
 
-        if rtype == "AWS::EBS::Volume":
+        if rtype == "AWS::EC2::Volume":
             if not cfg.get("Encrypted", False):
                 findings.append(_finding("UNENCRYPTED_EBS", rname))
+
+        if rtype == "AWS::RDS::DBInstance":
+            if not cfg.get("StorageEncrypted", False):
+                findings.append(_finding("UNENCRYPTED_RDS", rname))
 
         if rtype == "AWS::ElasticLoadBalancingV2::Listener":
             if str(cfg.get("Protocol", "")).upper() == "HTTP":

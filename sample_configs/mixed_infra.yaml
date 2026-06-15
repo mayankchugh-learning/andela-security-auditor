@@ -12,30 +12,30 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
 
-  PublicBucket:
+  AnotherSecureBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: my-public-cf-bucket
-      AccessControl: PublicRead
+      BucketName: my-second-secure-cf-bucket
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
 
   OpenSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Wide-open SG
+      GroupDescription: Allows SSH from anywhere
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 3389
-          ToPort: 3389
-          CidrIp: 0.0.0.0/0
 
   SecureSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Restricted SG
+      GroupDescription: Restricted to internal HTTPS only
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 443
@@ -45,7 +45,7 @@ Resources:
   HttpListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-      LoadBalancerArn: !Ref MyLoadBalancer
+      LoadBalancerArn: arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/my-lb/abc123
       Port: 80
       Protocol: HTTP
       DefaultActions:

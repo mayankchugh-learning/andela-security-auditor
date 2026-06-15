@@ -25,5 +25,7 @@ def parse_terraform(content: str) -> list[dict]:
                 rname = rname.strip('"')
                 if isinstance(cfg, list) and len(cfg) == 1:
                     cfg = cfg[0]
-                resources.append({"type": rtype, "name": rname, "config": _unquote(cfg)})
+                resources.append(
+                    {"type": rtype, "name": rname, "config": _unquote(cfg)}
+                )
     return resources

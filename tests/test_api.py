@@ -36,7 +36,9 @@ def test_health():
 
 
 def test_scan_vulnerable_tf():
-    resp = client.post("/scan", files={"file": ("vulnerable.tf", VULNERABLE_TF, "text/plain")})
+    resp = client.post(
+        "/scan", files={"file": ("vulnerable.tf", VULNERABLE_TF, "text/plain")}
+    )
     assert resp.status_code == 200
     data = resp.json()
     assert data["risk_score"] > 0

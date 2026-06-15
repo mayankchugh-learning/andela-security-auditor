@@ -19,25 +19,64 @@ def test_private_s3_bucket_clean():
 
 
 def test_open_ssh_flagged():
-    resources = [_res("aws_security_group", "bad_sg", {
-        "ingress": [{"from_port": 22, "to_port": 22, "protocol": "tcp", "cidr_blocks": ["0.0.0.0/0"]}]
-    })]
+    resources = [
+        _res(
+            "aws_security_group",
+            "bad_sg",
+            {
+                "ingress": [
+                    {
+                        "from_port": 22,
+                        "to_port": 22,
+                        "protocol": "tcp",
+                        "cidr_blocks": ["0.0.0.0/0"],
+                    }
+                ]
+            },
+        )
+    ]
     findings = apply_rules(resources)
     assert any(f["rule_id"] == "OPEN_SSH" for f in findings)
 
 
 def test_open_rdp_flagged():
-    resources = [_res("aws_security_group", "bad_sg", {
-        "ingress": [{"from_port": 3389, "to_port": 3389, "protocol": "tcp", "cidr_blocks": ["0.0.0.0/0"]}]
-    })]
+    resources = [
+        _res(
+            "aws_security_group",
+            "bad_sg",
+            {
+                "ingress": [
+                    {
+                        "from_port": 3389,
+                        "to_port": 3389,
+                        "protocol": "tcp",
+                        "cidr_blocks": ["0.0.0.0/0"],
+                    }
+                ]
+            },
+        )
+    ]
     findings = apply_rules(resources)
     assert any(f["rule_id"] == "OPEN_RDP" for f in findings)
 
 
 def test_open_all_ports_flagged():
-    resources = [_res("aws_security_group", "wide_sg", {
-        "ingress": [{"from_port": 0, "to_port": 0, "protocol": "-1", "cidr_blocks": ["0.0.0.0/0"]}]
-    })]
+    resources = [
+        _res(
+            "aws_security_group",
+            "wide_sg",
+            {
+                "ingress": [
+                    {
+                        "from_port": 0,
+                        "to_port": 0,
+                        "protocol": "-1",
+                        "cidr_blocks": ["0.0.0.0/0"],
+                    }
+                ]
+            },
+        )
+    ]
     findings = apply_rules(resources)
     assert any(f["rule_id"] == "OPEN_ALL_PORTS" for f in findings)
 

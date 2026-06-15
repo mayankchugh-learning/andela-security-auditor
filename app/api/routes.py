@@ -38,13 +38,18 @@ def health():
 
 @router.post("/scan")
 @limiter.limit("10/minute")
-async def scan_file(request: Request, file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def scan_file(
+    request: Request, file: UploadFile = File(...), db: Session = Depends(get_db)
+):
     original_name = file.filename or "upload"
     safe_name = _sanitise_filename(original_name)
 
     ext = os.path.splitext(safe_name)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(status_code=400, detail="Only .tf, .yaml, .yml, and .json files are supported.")
+        raise HTTPException(
+            status_code=400,
+            detail="Only .tf, .yaml, .yml, and .json files are supported.",
+        )
 
     content_bytes = await file.read()
     if len(content_bytes) > MAX_FILE_SIZE:
@@ -66,14 +71,18 @@ async def scan_file(request: Request, file: UploadFile = File(...), db: Session 
                 resources = parse_terraform(content)
             except Exception:
                 logger.exception("HCL parse error for %s", safe_name)
-                raise HTTPException(status_code=422, detail="HCL parse error. Check file syntax.")
+                raise HTTPException(
+                    status_code=422, detail="HCL parse error. Check file syntax."
+                )
         else:
             file_type = "yaml"
             try:
                 resources = parse_cloudformation(content)
             except Exception:
                 logger.exception("YAML parse error for %s", safe_name)
-                raise HTTPException(status_code=422, detail="YAML parse error. Check file syntax.")
+                raise HTTPException(
+                    status_code=422, detail="YAML parse error. Check file syntax."
+                )
 
         findings = apply_rules(resources)
         score, level = calculate_risk_score(findings)
@@ -94,7 +103,12 @@ async def scan_file(request: Request, file: UploadFile = File(...), db: Session 
         db.commit()
         db.refresh(scan)
 
-        logger.info("Scan complete: scan_id=%d, findings=%d, score=%d", scan.id, len(findings), score)
+        logger.info(
+            "Scan complete: scan_id=%d, findings=%d, score=%d",
+            scan.id,
+            len(findings),
+            score,
+        )
 
     finally:
         if tmp_path and os.path.exists(tmp_path):

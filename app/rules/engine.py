@@ -38,7 +38,11 @@ def _scan_for_secrets(cfg: dict, resource_name: str) -> list[dict]:
             continue
         if not val or any(val.startswith(p) for p in _SAFE_PREFIXES):
             continue
-        logger.warning("HARDCODED_SECRET detected in resource: %s, attribute: %s", resource_name, key)
+        logger.warning(
+            "HARDCODED_SECRET detected in resource: %s, attribute: %s",
+            resource_name,
+            key,
+        )
         f = _finding("HARDCODED_SECRET", resource_name)
         # Override description to name the attribute but NEVER include the value
         f["description"] = (
@@ -78,7 +82,10 @@ def apply_rules(resources: list[dict]) -> list[dict]:
                 protocol = str(ingress.get("protocol", "")).lower()
                 cidr_blocks = ingress.get("cidr_blocks", [])
                 ipv6_blocks = ingress.get("ipv6_cidr_blocks", [])
-                open_to_world = any(c in {"0.0.0.0/0", "::/0"} for c in list(cidr_blocks) + list(ipv6_blocks))
+                open_to_world = any(
+                    c in {"0.0.0.0/0", "::/0"}
+                    for c in list(cidr_blocks) + list(ipv6_blocks)
+                )
                 if protocol in ("-1", "all") and open_to_world:
                     findings.append(_finding("OPEN_ALL_PORTS", rname))
                     continue
@@ -105,7 +112,9 @@ def apply_rules(resources: list[dict]) -> list[dict]:
 
         if rtype in ("aws_iam_policy", "aws_iam_role_policy"):
             policy_doc = cfg.get("policy", "")
-            if isinstance(policy_doc, str) and ('"Action": "*"' in policy_doc or '"Action":["*"]' in policy_doc):
+            if isinstance(policy_doc, str) and (
+                '"Action": "*"' in policy_doc or '"Action":["*"]' in policy_doc
+            ):
                 findings.append(_finding("WEAK_IAM_POLICY", rname))
 
         if rtype == "aws_ebs_volume":
@@ -128,7 +137,9 @@ def apply_rules(resources: list[dict]) -> list[dict]:
         if rtype == "AWS::S3::Bucket":
             access_control = cfg.get("AccessControl", "")
             public_config = cfg.get("PublicAccessBlockConfiguration", {})
-            block_public = public_config.get("BlockPublicAcls", True) if public_config else False
+            block_public = (
+                public_config.get("BlockPublicAcls", True) if public_config else False
+            )
             if access_control in ("PublicRead", "PublicReadWrite") or not block_public:
                 findings.append(_finding("PUBLIC_S3_BUCKET", rname))
 

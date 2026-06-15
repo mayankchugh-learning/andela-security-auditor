@@ -26,6 +26,13 @@ Files changed: CLAUDE.md, .cursorrules, .claude/settings.json, .cursor/mdc/proje
 <!-- All subsequent turns will be appended below this line automatically -->
 
 ---
+Turn: 8
+Elapsed: 1h 55min
+Prompt: Add slowapi to requirements.txt. Commit and push. Update prompts.md. Report elapsed time.
+Files changed: requirements.txt (added slowapi==0.1.10), prompts.md
+---
+
+---
 Turn: 7
 Elapsed: 1h 50min
 Prompt: Run black . to auto-format all files. Then run pytest tests/ -v to confirm 29/29 still

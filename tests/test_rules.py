@@ -1,4 +1,3 @@
-import pytest
 from app.rules.engine import apply_rules
 from app.scoring.risk_score import calculate_risk_score
 

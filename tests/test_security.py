@@ -1,5 +1,4 @@
 """Tests for security hardening controls."""
-import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 from app.rules.engine import apply_rules

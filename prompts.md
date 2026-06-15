@@ -26,6 +26,17 @@ Files changed: CLAUDE.md, .cursorrules, .claude/settings.json, .cursor/mdc/proje
 <!-- All subsequent turns will be appended below this line automatically -->
 
 ---
+Turn: 6
+Elapsed: 1h 40min
+Prompt: Fix ruff linting errors — run ruff check . --fix to auto-fix all 6 unused import errors.
+        Then run pytest tests/ -v to confirm all 29 tests still pass. Commit and push.
+        Update prompts.md. Report elapsed time.
+Files changed: app/main.py, app/rules/engine.py, tests/test_api.py, tests/test_rules.py,
+               tests/test_scanner.py, tests/test_security.py (unused imports removed by ruff)
+Tests: 29/29 passing
+---
+
+---
 Turn: 5
 Elapsed: 1h 30min
 Prompt: Final tasks: complete README.md with ASCII architecture diagram, security rules table,

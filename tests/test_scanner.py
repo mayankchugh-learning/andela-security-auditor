@@ -1,4 +1,3 @@
-import pytest
 from app.scanner.hcl_parser import parse_terraform
 from app.scanner.cf_parser import parse_cloudformation
 

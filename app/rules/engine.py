@@ -1,5 +1,4 @@
 import logging
-import re
 
 from app.rules.definitions import RULES, Rule
 

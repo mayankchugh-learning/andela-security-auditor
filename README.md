@@ -127,15 +127,51 @@ A Python-based, API-first **Enterprise Security Guardrail Auditor** that:
 
 ## Quick Start
 
-### 1. Clone and install
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/mayankchugh-learning/andela-security-auditor.git
 cd andela-security-auditor
+```
+
+### 2. Create and activate a virtual environment
+
+**Using uv (recommended — faster):**
+```bash
+uv init
+uv venv
+```
+
+Windows:
+```bash
+.venv\Scripts\activate
+```
+
+Mac/Linux:
+```bash
+source venv/bin/activate
+```
+
+**Using standard Python (alternative):**
+```bash
+python -m venv venv
+```
+Then activate as above.
+
+### 3. Install dependencies
+
+> **Windows note:** Requires Python 3.11+. numpy 2.x is installed automatically — no C compiler needed.
+
+```bash
+uv pip install -r requirements.txt
+```
+
+Or with standard pip:
+```bash
 pip install -r requirements.txt
 ```
 
-### 2. Start the API
+### 4. Start the API
 
 ```bash
 uvicorn app.main:app --reload --port 8000
@@ -143,9 +179,17 @@ uvicorn app.main:app --reload --port 8000
 
 Browse to **http://localhost:8000/docs** for the interactive OpenAPI UI.
 
-### 3. Start the dashboard (new terminal)
+### 5. Start the dashboard (new terminal — activate venv first)
 
+Windows:
 ```bash
+venv\Scripts\activate
+streamlit run dashboard/app.py --server.port 8501
+```
+
+Mac/Linux:
+```bash
+source venv/bin/activate
 streamlit run dashboard/app.py --server.port 8501
 ```
 
